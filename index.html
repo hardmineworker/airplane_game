@@ -273,11 +273,11 @@
           }
         }
         //block이 오른쪽으로 움직이는 함수--------------------------------------
-        function block_Rmove(block) {
+        function block_Rmove(block, x) {
           if (block.x >= 300 + block.wdith) {
             block.x = Math.random() * -300;
             block.speed = block.fullspeed;
-            if (block.fullspeed <= 1) {
+            if (block.fullspeed <= x) {
               block.fullspeed += 0.02;
               block.wdith = Math.random() * 20 + 10;
               block.height = Math.random() * 20 + 10;
@@ -292,11 +292,11 @@
           }
         }
         //block이 왼쪽으로 움직이는 함수-------------------------------------------
-        function block_Lmove(block) {
+        function block_Lmove(block, x) {
           if (block.x <= -(300 + block.wdith)) {
             block.x = Math.random() * 300 + 300;
             block.speed = block.fullspeed;
-            if (block.fullspeed <= 1) {
+            if (block.fullspeed <= x) {
               block.fullspeed += 0.02;
               block.wdith = Math.random() * 20 + 10;
               block.height = Math.random() * 20 + 10;
@@ -402,12 +402,12 @@
 
         function game2() {
           ctx.clearRect(0, 0, 300, 500);
-          block_Rmove(R_block1);
-          block_Rmove(R_block2);
-          block_Lmove(L_block1);
-          block_Lmove(L_block2);
-          block_Fmove(block1, 3);
-          block_Fmove(block2, 3);
+          block_Rmove(R_block1,6);
+          block_Rmove(R_block2,6);
+          block_Lmove(L_block1,6);
+          block_Lmove(L_block2,6);
+          block_Fmove(block1, 6);
+          block_Fmove(block2, 6);
           box_start();
         }
 
