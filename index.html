@@ -97,7 +97,7 @@
           let index = rankList.length;
           console.log(rankList);
           for (let i = 0; i < rankList.length; i++) {
-            if (finallyTime > rankList[i]) {
+            if (finallyTime > parseFloat(rankList[i])) {
               index = i;
               break;
             }
