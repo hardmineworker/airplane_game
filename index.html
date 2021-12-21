@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>블럭 피하기 게임</title>
+    <style>
+      @font-face {
+        font-family: "semicolon";
+        src: url(C:\Users\DGHS\Desktop\code_zip\airplane_game);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        font-family: 'semicolon';
+      }
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .rank-el {
+        text-align: center;
+      }
+
+      #explain {
+        position: absolute;
+        top: 200px;
+        left: 180px;
+      }
+
+      #mycanvas {
+        border: 8px solid black;
+      }
+
+      #one {
+        position: absolute;
+        top: 75px;
+        left: 975px;
+        background-color: black;
+        width: 100px;
+        height: 50px;
+        transform: translate(-50%);
+      }
+
+      #start {
+        position: absolute;
+        top: 150px;
+        left: 380px;
+        width: 100px;
+        height: 50px;
+      }
+
+      #change {
+        position: absolute;
+        top: 210px;
+        left: 380px;
+        width: 100px;
+        height: 50px;
+      }
+
+      #display {
+        position: absolute;
+        top: 100px;
+        left: 1000px;
+        width: 100px;
+        height: 50px;
+        transform: translate(-50%);
+      }
+    </style>
+    <script>
+      window.onload = function () {
+        //쏜다
+        const bullets = [];
+        const reloadSpeed = 1.2 * 100000;
+        let frame = 0;
+
+        function bulletHandler() {
+          frame += 1;
+          if (frame % reloadSpeed === 0) {
+            is_fire = true;
+          }
+          //그리는 함수
+          for (let i = 0; i < bullets.length; i++) {
+            bullets[i].draw();
+          }
+          //충돌 감지 + 삭제하기
+          for (let i = 0; i < bullets.length; i++) {
+            if (bullets[i].y < 0) {
+              bullets.splice(i, 1);
+              i--;
+            }
+          }
+        }
+
+        /*
+            //그리는 함수
+            for (let i = 0; i < bullets.length; i++) {
+              bullets[i].draw();
+            }
+            //충돌감지
+            for (let i = 0; i < bullets.length; i++) {
+              //총알이랑
+            }
+      */
+
+        class Bullet {
+          constructor(x, y) {
+            this.width = 5;
+            this.height = 5;
+            this.x = x;
+            this.y = y;
+            this.speed = 6;
+          }
+
+          draw() {
+            //그리는 함수
+            ctx.beginPath();
+            ctx.drawImage(
+              images[5],
+              this.x - box.width,
+              this.y - box.height,
+              this.width + 40,
+              this.height + 40
+            );
+            ctx.closePath();
+
+            //이거임
+            this.y -= this.speed;
+          }
+        }
+
+        var now;
+        const ranks = localStorage.getItem("ranking");
+        const rankBoard = document.querySelector("#rankboard");
+        if (!ranks) {
+          const div = document.createElement("div");
+          div.innerHTML = "랭킹이 없습니다..";
+          div.classList = "rank-el";
+          rankBoard.append(div);
+        } else {
+          const rankList = ranks.split("/");
+          rankList.splice(rankList.length - 1, 1);
+          for (let i = 0; i < rankList.length; i++) {
+            const div = document.createElement("div");
+            div.innerHTML = rankList[i];
+            div.classList = "rank-el";
+            rankBoard.append(div);
+          }
+        }
+        function recordRank(finallyTime) {
+          if (!ranks) {
+            localStorage.setItem("ranking", finallyTime + "/");
+            return;
+          }
+          const rankList = ranks.split("/");
+          rankList.pop(rankList.length - 1, 1);
+          let index = rankList.length;
+          console.log(rankList);
+          for (let i = 0; i < rankList.length; i++) {
+            if (finallyTime > parseFloat(rankList[i])) {
+              console.log(finallyTime, rankList[i]);
+              index = i;
+              break;
+            }
+          }
+          let record = "";
+          for (let i = 0; i < rankList.length; i++) {
+            if (i == index) {
+              console.log(index, i);
+              record += finallyTime + "/";
+            }
+            record += rankList[i] + "/";
+          }
+          if (index == rankList.length) {
+            record += finallyTime + "/";
+          }
+          localStorage.setItem("ranking", record);
+        }
+        document.addEventListener("keydown", Pkey, false);
+        document.addEventListener("keyup", Ukey, false);
+
+        var images = [];
+        function preload() {
+          for (var i = 0; i < arguments.length; i++) {
+            images[i] = new Image();
+            images[i].src = preload.arguments[i];
+          }
+        }
+        preload(
+          "./airplane.png",
+          "./right_airplane.png",
+          "./left_airplane.png",
+          "./background.jpg",
+          "./운석.png",
+          "./razer.png"
+        );
+
+        function sleep(ms) {
+          const wakeUpTime = Date.now() + ms;
+          while (Date.now() < wakeUpTime) {}
+        }
+        function start() {
+          startButton.onclick = null;
+          startTime = new Date();
+          timer = setInterval(function () {
+            now = new Date();
+            display.innerHTML = ((now - startTime) / 1000).toFixed(2);
+          }, 10);
+        }
+        function stop() {
+          clearInterval(timer);
+          startButton.onclick = start;
+        }
+        var is_fire = false;
+        let bulletTimer;
+        function Pkey(e) {
+          if (e.keyCode === 37 && box.x >= 0) {
+            Left = true;
+          } else if (e.keyCode === 38 && box.y + box.height >= 0) {
+            Up = true;
+          } else if (e.keyCode === 39 && box.x <= 500) {
+            Right = true;
+          } else if (e.keyCode === 40 && box.y <= 500) {
+            Down = true;
+          } else if (e.keyCode === 90) {
+            if (game_start == true) {
+              if (speed == true) {
+                speed = false;
+                item.speed_Up();
+              }
+            }
+          } else if (e.keyCode === 88) {
+            if (game_start == true) {
+              if (small == true) {
+                small == false;
+                item.small();
+              }
+            }
+          } else if (e.keyCode === 67) {
+            if (game_start == true) {
+              if (k == true) {
+                if (move_stop == true) {
+                  move_stop = false;
+                  k = false;
+                  item.move();
+                }
+              }
+            }
+          } else if (e.keyCode === 82) {
+            if (game_start == false) {
+              game_start = true;
+              start();
+              setInterval(games.game1, 0.1);
+            }
+          } else if (e.keyCode === 84) {
+            if (game_start == false) {
+              game_start = true;
+              start();
+              setInterval(games.game2, 0.1);
+            }
+          } else if (e.keyCode === 86) {
+          }
+        }
+        function Ukey(e) {
+          if (e.keyCode === 37) {
+            Left = false;
+          } else if (e.keyCode === 38) {
+            Up = false;
+          } else if (e.keyCode === 39) {
+            Right = false;
+          } else if (e.keyCode === 40) {
+            Down = false;
+          } else if (e.keyCode === 90) {
+            speed_Up = false;
+          } else if (e.keyCode === 88) {
+            small = false;
+          } else if (e.keyCode === 86) {
+            //clearInterval(bulletTimer);
+            console.log(bullets);
+            if ((is_fire = true)) {
+              if (box.width === 20) {
+                bullets.push(
+                  new Bullet(
+                    box.x + 7.5,
+                    y - (box.y + box.height + (box.height * 1) / 2)-5
+                  )
+                );
+              } else {
+                bullets.push(
+                  new Bullet(
+                    box.x - box.width / 2 - box.width/5 - 1,
+                    y - (box.y + box.height*3+5)
+                  )
+                );
+              }
+              /*bulletTimer = setInterval(() => {
+                console.log("start");
+                bullets.push(
+                  new Bullet(
+                    box.x - box.width,
+                    box.y - box.height
+                  )
+                );
+              }, reloadSpeed / 10);*/
+              is_fire = false;
+            }
+          }
+        }
+
+        function small_f() {
+          box.width = 10;
+          box.height = 10;
+        }
+        function big() {
+          box.width = 20;
+          box.height = 20;
+        }
+        function speed_down() {
+          box.speed = 1.6;
+          speed = false;
+        }
+
+        function touch(block) {
+          if (touching == false) {
+            if (
+              box.x + box.width - 5 >= block.x &&
+              box.x + 5 <= block.x + block.width &&
+              y - box.y >= block.y &&
+              y - (box.y + box.height) <= block.y + block.height
+            ) {
+              touching = true;
+            }
+          } else if (touching == true) {
+            recordRank(((now - startTime) / 1000 - 0.01).toFixed(2));
+            blockMaking = true;
+            stop();
+            game_start = false;
+            location.reload();
+            confirm("끝! 다시시작하기");
+            event.preventDefault();
+          }
+        }
+        var blockMaking = true;
+        function block_cheak(block) {}
+        function block_move(D, speed) {
+          function blockMaker() {
+            if (D == "front") {
+              (this.x = Math.floor(Math.random() * 150 + this.width)),
+                (this.y = Math.random() * -100),
+                (this.height = Math.random() * 20 + 10),
+                (this.width = Math.random() * 20 + 10),
+                (this.speed = 1),
+                (this.fullspeed = 2);
+            } else if (D == "right") {
+              (this.height = Math.random() * 20 + 10),
+                (this.width = Math.random() * 20 + 10),
+                (this.x = Math.floor(Math.random() * -150 - 150)),
+                (this.y = Math.random() * 500),
+                (this.speed = 1),
+                (this.fullspeed = 2);
+            } else if (D == "left") {
+              (this.height = Math.random() * 20 + 10),
+                (this.width = Math.random() * 20 + 10),
+                (this.x = Math.floor(Math.random() * 150 + 350)),
+                (this.y = Math.random() * 500),
+                (this.speed = 1),
+                (this.fullspeed = 2);
+            } else if (D == "back") {
+              (this.height = Math.random() * 20 + 10),
+                (this.width = Math.random() * 20 + 10),
+                (this.x = Math.random() * (300 + this.width)),
+                (this.y = Math.random() * this.height + 500),
+                (this.speed = 1),
+                (this.fullspeed = 2);
+            }
+          }
+          if (blockMaking == true) {
+            for (i = 0; i < 100; i++) {
+              blocks[i] = new blockMaker();
+            }
+
+            blockMaking = false;
+          }
+          if (D == front) {
+            if (this.y >= 500 + this.height) {
+              this.y = Math.random() * -500;
+              this.speed = this.fullspeed;
+              if (this.fullspeed <= speed) {
+                this.fullspeed += 0.1;
+                this.width = Math.random() * 20 + 10;
+                this.height = Math.random() * 20 + 10;
+              }
+              this.x = Math.floor(Math.random() * 300 - this.width);
+            }
+            ctx.drawImage(images[4], this.x, this.y, this.width, this.height);
+            if (move_stop == true) {
+              this.y += this.speed;
+            }
+          } else if (D == right) {
+            if (this.x >= 300 + this.width) {
+              this.x = Math.random() * -300;
+              this.speed = this.fullspeed;
+              if (this.fullspeed <= speed) {
+                this.fullspeed += 0.1;
+                this.width = Math.random() * 20 + 10;
+                this.height = Math.random() * 20 + 10;
+              }
+              this.y = Math.floor(Math.random() * 500 - this.width);
+            }
+            ctx.lineWidth = 1;
+            ctx.fillStyle = "red";
+            ctx.drawImage(images[4], this.x, this.y, this.width, this.height);
+            if (move_stop == true) {
+              this.x += this.speed;
+            }
+          } else if (D == left) {
+            if (this.x <= -(300 + this.width)) {
+              this.x = Math.random() * 300 + 300;
+              this.speed = this.fullspeed;
+              if (this.fullspeed <= speed) {
+                this.fullspeed += 0.1;
+                this.width = Math.random() * 20 + 10;
+                this.height = Math.random() * 20 + 10;
+              }
+              this.y = Math.floor(Math.random() * 500 - this.width);
+            }
+            ctx.lineWidth = 1;
+            ctx.fillStyle = "red";
+            ctx.drawImage(images[4], this.x, this.y, this.width, this.height);
+            if (move_stop == true) {
+              this.x -= this.speed;
+            }
+          } else if (D == back) {
+            if (this.y <= -this.height) {
+              this.y = Math.random() * this.height + 500;
+              this.speed = this.fullspeed;
+              if (this.fullspeed <= speed) {
+                this.fullspeed += 0.1;
+                this.width = Math.random() * 20 + 10;
+                this.height = Math.random() * 20 + 10;
+              }
+              this.x = Math.floor(Math.random() * 300 - this.width);
+            }
+            ctx.lineWidth = 1;
+            ctx.fillStyle = "red";
+            ctx.drawImage(images[4], this.x, this.y, this.width, this.height);
+            if (move_stop == true) {
+              this.y -= this.speed;
+            }
+          }
+        }
+        function box_start() {
+          if (box.x < 0) {
+            box.x = 0;
+          } else if (box.x > 300 - box.width) {
+            box.x = 300 - box.width;
+          } else if (y - box.y > 500) {
+            box.y = 0;
+          } else if (y - (box.y + box.height) < 0) {
+            box.y = y - (box.y + box.height);
+          }
+          if (Left == true) {
+            box.x -= box.speed;
+          } else if (Right == true) {
+            box.x += box.speed;
+          } else if (Up == true) {
+            box.y += box.speed;
+          } else if (Down == true) {
+            box.y -= box.speed;
+          }
+          draw();
+          for (i = 0; i < blocks.length; i++) {
+            touch(blocks[i]);
+          }
+        }
+
+        function draw() {
+          ctx.beginPath();
+          if (Right == true) {
+            ctx.drawImage(
+              images[1],
+              box.x - box.width / 2,
+              y - (box.y + box.height + box.height / 2),
+              box.width * 2,
+              box.height * 2
+            );
+          } else if (Left == true) {
+            ctx.drawImage(
+              images[2],
+              box.x - box.width / 2,
+              y - (box.y + box.height + box.height / 2),
+              box.width * 2,
+              box.height * 2
+            );
+          } else {
+            ctx.drawImage(
+              images[0],
+              box.x - box.width / 2,
+              y - (box.y + box.height + box.height / 2),
+              box.width * 2,
+              box.height * 2
+            );
+          }
+          ctx.closePath();
+        }
+        var Left,
+          Right,
+          Up,
+          Down,
+          move_stop = true,
+          k = true;
+        var canvas = document.getElementById("mycanvas");
+        var ctx = canvas.getContext("2d");
+        var box = {
+          height: 20,
+          width: 20,
+          x: 150,
+          y: 250,
+          speed: 1.6,
+        };
+        var item = {
+          speed_Up: function () {
+            box.speed = 3;
+            setTimeout(function () {
+              speed_down();
+              setTimeout(function () {
+                speed = true;
+              }, 3000);
+            }, 3000);
+          },
+          small: function () {
+            small_f();
+            setTimeout(function () {
+              big();
+              setTimeout(function () {
+                small = true;
+              }, 3000);
+            }, 3000);
+          },
+          move: function () {
+            setTimeout(function () {
+              move_stop = true;
+              setTimeout(function () {
+                k = true;
+              }, 10000);
+            }, 3000);
+          },
+        };
+
+        var blocks = [];
+        var x = 0;
+        var y = 500;
+        var games = {
+          game1: function () {
+            ctx.clearRect(0, 0, 300, 500);
+            ctx.beginPath();
+            ctx.drawImage(images[3], 0, 0);
+            ctx.closePath();
+            block_move.call(blocks[0], front, 6);
+            block_move.call(blocks[1], front, 6);
+            block_move.call(blocks[2], front, 6);
+            block_move.call(blocks[3], front, 6);
+            block_move.call(blocks[4], front, 6);
+            block_move.call(blocks[5], front, 1);
+            box_start();
+            bulletHandler();
+          },
+          game2: function () {
+            ctx.clearRect(0, 0, 300, 500);
+            ctx.drawImage(images[3], 0, 0);
+            block_move.call(blocks[0], right, 6);
+            block_move.call(blocks[1], left, 6);
+            block_move.call(blocks[2], front, 6);
+            block_move.call(blocks[3], left, 6);
+            block_move.call(blocks[4], right, 6);
+            block_move.call(blocks[5], front, 6);
+            block_move.call(blocks[6], back, 6);
+            block_move.call(blocks[7], back, 6);
+            box_start();
+          },
+        };
+
+        var front = "front",
+          right = "right",
+          left = "left",
+          back = "back";
+        var speed_Up = false;
+        var small = true;
+        var speed = true;
+        var size_z = 0;
+        var game_start = false;
+
+        var touching = false;
+        var startButton = document.getElementById("start");
+        var changeButton = document.getElementById("change");
+        var display = document.getElementById("display");
+        function bulletMaker() {
+          (this.width = 5),
+            (this.height = 5),
+            (this.x = box.x - box.width),
+            (this.y = box.y - box.height);
+        }
+
+        startButton.onclick = function () {
+          if (game_start == false) {
+            game_start = true;
+            start();
+            setInterval(games.game1, 0.1);
+          }
+        };
+        changeButton.onclick = function () {
+          if (game_start == false) {
+            game_start = true;
+            start();
+            setInterval(games.game2, 0.1);
+          }
+        };
+      };
+    </script>
+  </head>
+  <body>
+    <div>
+      <p id="explain">
+        r은 첫번째 게임시작
+        <br />
+        t은 두번째 게임시작
+        <br />
+        z는 속도 증가 3초 쿨 3초
+        <br />
+        x는 축소 3초 쿨 3초
+        <br />
+        c는 블록정지 3초 쿨 10초
+        <br />
+        v는 총 발사
+      </p>
+      <br />
+      <p id="one"></p>
+      <p>
+        <span
+          id="display"
+          style="
+            font-weight: bold;
+            font-size: 1.5em;
+            line-height: 1em;
+            color: rgb(0, 255, 21);
+            font-family: arial;
+          "
+        >
+          0.00
+        </span>
+      </p>
+      <input id="start" type="button" value="1.start" />
+      <input id="change" type="button" value="2.start" />
+      <canvas id="mycanvas" height="500;" weight="500"></canvas>
+      <div
+        id="rankboard"
+        style="
+          position: absolute;
+          top: 200px;
+          left: 1000px;
+          width: 200px;
+          height: 250px;
+          border: 2px solid black;
+          transform: translate(-50%);
+          overflow: auto;
+        "
+      >
+        <button onclick="localStorage.setItem('ranking','');location.reload()">
+          랭킹삭제
+        </button>
+      </div>
+    </div>
+  </body>
+</html>
