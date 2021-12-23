@@ -95,6 +95,8 @@
           sound.src = "./sound3.mp3";
           arr_sound.push(sound);
         }
+        
+        
         var canvas = document.getElementById("mycanvas");
         var ctx = canvas.getContext("2d");
         //쏜다
@@ -310,6 +312,7 @@
           } else if (e.keyCode === 86) {
             for (let i = 0; i < arr_sound.length; i++) {
               if (arr_sound[i].paused) {
+                arr_sound[i].volume = 0.5;
                 arr_sound[i].play();
                 break;
               }
